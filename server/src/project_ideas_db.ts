@@ -1,4 +1,4 @@
-import express from 'express'
+import * as express from 'express'
 import { pool } from "./db"
 import type { Request,Response, Router } from "express"
 

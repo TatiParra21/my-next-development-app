@@ -1,21 +1,24 @@
 
 
-import dotenv from 'dotenv';
-import path from 'path'
+import * as dotenv from 'dotenv';
+import * as path from "path";
 import { Request, Response } from 'express';
 import axios from "axios";
 
 // Point to the correct location of .env manually
-dotenv.config({ path: path.resolve(__dirname, '../.env') }) // ✅
+//dotenv.config({ path: path.resolve(__dirname, '../.env') }) // ✅
+dotenv.config({
+  path: path.resolve(__dirname, '../.env')
+})
 import { router } from './project_ideas_db';
-import cors from 'cors';
-import express from 'express'
-import listEndpoints from "express-list-endpoints";
+import * as cors from 'cors';
+import * as express from 'express'
+import * as listEndpoints from "express-list-endpoints";
 
 const app = express();
 const PORT = 4000
 // 👇 Serve your built React files
-app.use(express.static(path.join(__dirname, "out/renderer")));
+//app.use(express.static(path.join(__dirname, "out/renderer")));
 
 console.log("🧭 Registered routes:", listEndpoints(app));
 // Start the server
