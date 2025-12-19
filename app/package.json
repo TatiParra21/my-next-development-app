@@ -1,0 +1,120 @@
+{
+  "name": "my-next-dev-project",
+  "productName": "My Next Dev Project",
+  "version": "1.0.0",
+  "description": "An Electron application with React and TypeScript",
+  "main": "./out/main/index.js",
+  "type": "module",
+  "author": "example.com",
+  "homepage": "https://electron-vite.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TatiParra21/my-next-dev-project"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "eslint --cache .",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "start": "electron-vite preview",
+    "start:backend": "ts-node backend/src/index.ts",
+    "dev": "electron-vite dev",
+    "dev:backend": "npx ts-node-dev --respawn --project tsconfig.backend.json backend/src/index.ts",
+    "build": "npm run typecheck && electron-vite build",
+    "postinstall": "electron-builder install-app-deps",
+    "build:unpack": "npm run build && electron-builder --dir",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "electron-vite build && electron-builder --mac",
+    "build:linux": "electron-vite build && electron-builder --linux"
+  },
+  "dependencies": {
+    "@chakra-ui/react": "^3.27.1",
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.5",
+    "@radix-ui/react-hover-card": "^1.1.15",
+    "@supabase/supabase-js": "^2.58.0",
+    "axios": "^1.13.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.2.1",
+    "electron-conf": "^1.3.0",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.3.9",
+    "framer-motion": "^12.23.24",
+    "google-auth-library": "^10.5.0",
+    "googleapis": "^164.1.0",
+    "jwt-decode": "^4.0.0",
+    "next-themes": "^0.4.6",
+    "nodemon": "^3.1.10",
+    "openid-client": "^6.8.1",
+    "path": "^0.12.7",
+    "pg": "^8.16.3",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.6.3",
+    "react-select": "^5.10.2",
+    "zod": "^4.0.10",
+    "zustand": "^5.0.7"
+  },
+  "devDependencies": {
+    "@electron-toolkit/eslint-config-prettier": "^3.0.0",
+    "@electron-toolkit/eslint-config-ts": "^3.0.0",
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@tailwindcss/vite": "^4.1.16",
+    "@types/jwt-decode": "^2.2.1",
+    "@types/keytar": "^4.4.0",
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.1.1",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
+    "electron": "^35.1.5",
+    "electron-builder": "^25.1.8",
+    "electron-devtools-installer": "^4.0.0",
+    "electron-vite": "^3.1.0",
+    "eslint": "^9.24.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "postcss": "^8.5.6",
+    "prettier": "^3.5.3",
+    "react": "^19.1.0",
+    "react-devtools": "^7.0.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.16",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.2.6"
+  },
+  "build": {
+    "asar": true,
+    "extraResources": [
+      {
+        "from": "node_modules/express",
+        "to": "node_modules/express"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "TatiParra21",
+        "repo": "my-next-dev-project"
+      }
+    ],
+    "appId": "com.mynextdevproject",
+    "protocols": [
+      {
+        "name": "MyNextDevProject",
+        "schemes": [
+          "mynextdevproject"
+        ]
+      }
+    ],
+    "nsis": {
+      "oneClick": false
+    }
+  }
+}
