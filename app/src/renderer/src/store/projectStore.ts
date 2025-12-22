@@ -19,8 +19,13 @@ export const projectDataStore = create<ProjectDataStoreType>((set)=>({
     openedProject: null,
     setOpenedProject:(openedProject:ProjectType | null)=>set({openedProject:openedProject}),
     updateProjects: async()=>{
-      const projects:ProjectType[] = await fetchRequest()
+      const userId = googleAuthStore.getState().user?.id
+      console.log("user ID",userId)
+      if(userId){
+  const projects:ProjectType[] = await fetchRequest(userId)
          projectDataStore.setState({projects:projects})
+      }
+    
     }
 
 }))
@@ -106,6 +111,7 @@ try {
    set({
       user: {
         email: profile.email,
+        id:profile.id,
         name: profile.name,
         picture: profile.picture,
       },

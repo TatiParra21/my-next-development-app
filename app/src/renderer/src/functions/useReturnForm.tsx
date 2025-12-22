@@ -45,7 +45,7 @@ export const useReturnForm =(form:ProjectFormType):UseFormReturnType=>{
     const location= useLocation()
     const [newGoals,setNewGoals] = useState<GoalsArray | undefined>(initialValues?.goals_checklist.goals)
     const [selectedOptions, setSelectedOptions] = useState<CategoriesTypeObjArr>(initialValues &&initialValues.categories ? initialValues.categories : {})
-   
+   const userId = googleAuthStore(state=>state.user?.id)!
     const [resultFromBackend,setResultFromBackend] = useState<ResultFromBackendType>({message:"",success:false})
     const isNotActive  = formStore(selectIsNotActive)
     const  setIsNotActive  = formStore(selectSetIsNotActive)
@@ -87,12 +87,13 @@ export const useReturnForm =(form:ProjectFormType):UseFormReturnType=>{
              const isCompleted :boolean = formData.get("is-completed") === "on"
             const projectDescription = formData.get("project-description")
             const projectName = formData.get("project-name")
-            console.log(projectName, "naem")
+            //console.log(projectName, "naem")
            if(typeof projectName !== "string" || typeof projectDescription !== "string"){
                 throw new Error("No project name")
            }
             const projectFormInfo : ProjectFormSubmitType={
                 name: projectName,
+                user_id:userId,
                 goals_checklist:newGoals ? {goals:newGoals}: {goals:[]},
                 description: projectDescription,
                 categories: selectedOptions,

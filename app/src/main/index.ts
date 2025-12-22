@@ -1,6 +1,6 @@
 import { app, BrowserWindow, safeStorage, } from 'electron';
 import { Conf } from "electron-conf";
-import path from 'node:path';
+import path from 'path';
 
 import { ipcMain, } from "electron";
 import axios from "axios";
@@ -40,7 +40,7 @@ async function refreshAccessToken():Promise<string| null> {
   const refreshToken = getSecureToken("google-refresh-token");
   if (!refreshToken) throw new Error("No refresh token available");
 
-  const res = await axios.get("https://my-next-dev-project.onrender.com/refresh-token", {
+  const res = await axios.get("http://localhost:4000//refresh-token", {
     params: { refresh_token: refreshToken },
   });
 
@@ -127,7 +127,7 @@ ipcMain.handle(
     try {
       // 1. Get OAuth URL from backend
       console.log("We are over here")
-      const res = await axios.get("https://my-next-dev-project.onrender.com/auth/google", {
+      const res = await axios.get("http://localhost:4000/auth/google", {
         params: { code_challenge: codeChallenge },
       });
       const authUrl = res.data.authUrl;
@@ -145,8 +145,9 @@ ipcMain.handle(
           const parsedUrl = new URL(newUrl);
   console.log("we went onto rokern res1", parsedUrl.origin,parsedUrl.pathname)
           // 3. Check if Google redirected to our backend callback
+
           if (
-            parsedUrl.origin === "https://my-next-dev-project.onrender.com" &&
+            parsedUrl.origin === "http://localhost:4000" &&
             parsedUrl.pathname === "/oauth2callback"
           ) {
               console.log("it passeds")
@@ -158,12 +159,14 @@ ipcMain.handle(
               console.log("we went onto rokern res,",code, codeVerifier)
               //Exchange code for token via backend
               const tokenRes = await axios.get(
-                "https://my-next-dev-project.onrender.com/oauth2callback",
+                "http://localhost:4000/oauth2callback",
                 {
                   params: { code, code_verifier: codeVerifier },
                 }
               );
               // Save tokens in OS keychain
+
+              console.log("where tokens saved")
               setSecureToken( "google-access-token",tokenRes.data.access_token)
              setSecureToken( "google-refresh-token",tokenRes.data.refresh_token)
     

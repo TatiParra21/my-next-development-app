@@ -1,12 +1,14 @@
 
 import { JSX,  } from "react"
 import { deleteRequest } from "@renderer/functions/requests"
-import {projectDataStore, selectUpdateProjects} from "@renderer/store/projectStore"
+import {projectDataStore,googleAuthStore, selectUpdateProjects} from "@renderer/store/projectStore"
 import { NavLink } from "react-router-dom";
 export const DeleteWarning =({on, id, toggleWarning}:{on:boolean, id:string, toggleWarning:()=>void}): JSX.Element =>{   
     const updateProject = projectDataStore(selectUpdateProjects)   
+    const userId = googleAuthStore(state=>state.user?.id)
     const deleteRequestAndReset =async():Promise<void>=>{
-       await deleteRequest(id)
+        if(!userId)return
+       await deleteRequest(id, userId)
        await updateProject()     
          toggleWarning()
     }

@@ -38,6 +38,7 @@ const ProjectSelectionBase =():JSX.Element=>{
     const showInfo =(id:string): void=>{
     setShow(prev=> prev == id ?null : id)
 }
+
       const location = useLocation()
     const save :string= `${location.pathname}`
     const projects : ProjectType[] | [] = projectDataStore(selectProjects)
@@ -57,6 +58,7 @@ const ProjectSelectionBase =():JSX.Element=>{
     return(<>
         <FilterTab/>
         <div className={clsx("all-project-cells", show && "adjust-cells")}>
+           
             {projects.length == 0 && <>NO PROJECTS</>}
             {projectSelection} 
         </div>

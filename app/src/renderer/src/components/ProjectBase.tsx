@@ -3,7 +3,7 @@ import { JSX,useState} from "react"
 import type { ProjectType,CategoriesTypeObjArr, GoalsChecklistType } from "@renderer/types"
 import { AddGoalsDiv } from "@renderer/subComponents/AddGoalsDiv"
 import { DeleteWarning } from "@renderer/subComponents/DeleteWarning"
-import { projectDataStore} from "@renderer/store/projectStore"
+import { googleAuthStore, projectDataStore} from "@renderer/store/projectStore"
 import { patchGoalsRequest } from "@renderer/functions/requests"
 import { ResultFromBackendType } from "./FormComponents/ProjectForm"
 
@@ -35,6 +35,7 @@ export const ProjectBase =({state, projectInfo}:{state:{save:string}, projectInf
     const [warning, setWarning] = useState<boolean>(false)
     const updateProjects = projectDataStore(s=>s.updateProjects)
     const setOpenedProject = projectDataStore(s=>s.setOpenedProject)
+    const userId = googleAuthStore(state=>state.user?.id)
     const toggleWarning =():void=>{
       setWarning(prev=>!prev)
     }
@@ -43,7 +44,8 @@ export const ProjectBase =({state, projectInfo}:{state:{save:string}, projectInf
     const save :string = state.save  
 
     const submitGoals =async(newGoals:GoalsArray):Promise<void>=>{
-        const res :ResultFromBackendType | null= await patchGoalsRequest(projectInfo.id,{goals:newGoals})
+        if(!userId)return
+        const res :ResultFromBackendType | null= await patchGoalsRequest(projectInfo.id,{goals:newGoals, user_id:userId})
         console.log(res, "res form submit")
         if(res && res.success)updateProjects()
     }

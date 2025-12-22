@@ -29,6 +29,7 @@ export type GoalsChecklistType={
 export type ProjectType ={
     id:string,
     name: string,
+    user_id:string,
     description: string,
     categories?: CategoriesTypeObjArr,
     goals_checklist:GoalsChecklistType 

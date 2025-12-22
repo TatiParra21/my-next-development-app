@@ -42,7 +42,7 @@ export const AddGoalsDiv =({goals, editFunc, source}:{goals: GoalsArray,source:s
        if(source == "project-form"){
         editFunc(newGoals)
        }
-      console.log("new goals updated")
+     // console.log("new goals updated")
 
      },[newGoals,source,editFunc])
 

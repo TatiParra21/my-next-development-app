@@ -26,11 +26,11 @@ export const ProjectForm=(form:ProjectFormType):JSX.Element=>{
         handleCategoryChoices,initialValues, newGoals,
         updateGoals,isNotActive,
         resultFromBackend}:UseFormReturnType = useReturnForm(form)
-        console.log("loading??",loading)
+        //console.log("loading??",loading)
         const messageRef = useRef<HTMLParagraphElement | null>(null)
         useScrollToComponent(messageRef,resultFromBackend.message)
-        window.addEventListener("blur", () => console.log("❌ Window blurred"));
-        window.addEventListener("focus", () => console.log("✅ Window focused"));
+      //  window.addEventListener("blur", () => console.log("❌ Window blurred"));
+       // window.addEventListener("focus", () => console.log("✅ Window focused"));
         if(loading)return <LoadingRoller/>
     return(
         <form className="flex colum" onSubmit={handleSubmit}>        

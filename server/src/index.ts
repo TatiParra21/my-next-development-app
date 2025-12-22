@@ -1,7 +1,7 @@
 
 
-import * as dotenv from 'dotenv';
-import * as path from "path";
+import  dotenv from 'dotenv';
+import  path from "path";
 import { Request, Response } from 'express';
 import axios from "axios";
 
@@ -11,9 +11,9 @@ dotenv.config({
   path: path.resolve(__dirname, '../.env')
 })
 import { router } from './project_ideas_db';
-import * as cors from 'cors';
-import * as express from 'express'
-import * as listEndpoints from "express-list-endpoints";
+import cors from 'cors';
+import express from 'express'
+import listEndpoints from "express-list-endpoints";
 
 const app = express();
 const PORT = 4000
@@ -29,7 +29,7 @@ app.use("/database",router)
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const REDIRECT_URI =
-  "https://my-next-dev-project.onrender.com/oauth2callback"; // hosted redirect
+  "http://localhost:4000/oauth2callback"; // hosted redirect
 
 app.get("/auth/google", (req, res) => {
   const code_challenge = req.query.code_challenge;

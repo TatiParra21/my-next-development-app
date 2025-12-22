@@ -4,6 +4,7 @@ import { ResultFromBackendType} from "@renderer/components/FormComponents/Projec
 import { CategoriesTypeObjArr } from "@renderer/types"
 import { GoalsChecklistType } from "@renderer/types"
 
+
 // const getAuthToken = async(): Promise<string | null> => {
 //   const token = await window.secureAuth.getToken();
 //   console.log("tokeb in re", token)
@@ -18,7 +19,8 @@ const api = async <T,>( url: string, options: RequestInit = {}, requestName:stri
  // if (!token) return null; // this line was fine
   try{
     const hasBody = options.body || ["POST", "PATCH", "PUT"].includes(options.method || "");
-    const res = await fetch(`https://my-next-dev-project.onrender.com${url}`, {
+    console.log(hasBody, "hass??")
+    const res = await fetch(`http://localhost:4000${url}`, {
     ...options,
     headers: {
      // Authorization: `Bearer ${token}`,
@@ -38,20 +40,24 @@ const api = async <T,>( url: string, options: RequestInit = {}, requestName:stri
   } 
 };
 
-export const fetchRequest =async():Promise<ProjectType[]>=>{
-    const data =await api<{results:ProjectType[]}>("/database/project-ideas",{},"fetchRequest") 
+export const fetchRequest =async(userId:string):Promise<ProjectType[]>=>{
+    const data =await api<{results:ProjectType[]}>(`/database/project-ideas?user=${userId}`,{},"fetchRequest") 
     return data?.results ?? []
 }
 export const postRequest = async(body:Array<ProjectFormSubmitType>):Promise<ResultFromBackendType |null>=>{
-    return api<ResultFromBackendType>("/database/write-new-project",{method:"POST", body:JSON.stringify(body)},"postRequest")
+  console.log("post request")
+    const res= await api<ResultFromBackendType>("/database/write-new-project",{method:"POST", body:JSON.stringify(body)},"postRequest")
+    console.log("THE RESULT",res)
+    return res
 }
 export const patchRequest = async(id:string,body:Record<string, unknown>):Promise<ResultFromBackendType |null>=>{
+  console.log(body, "ooo")
     return api<ResultFromBackendType>(`/database/project-ideas/${id}/edit`,{method:"PATCH", body:JSON.stringify(body)},"patchRequest")
 }
-export const patchGoalsRequest = async(id:string, body:GoalsChecklistType):Promise<ResultFromBackendType |null> =>{
+export const patchGoalsRequest = async(id:string, body:GoalsChecklistType &{user_id:string}):Promise<ResultFromBackendType |null> =>{
     return api<ResultFromBackendType>(`/database/project-ideas/${id}/goals`,{method:"PATCH", body:JSON.stringify(body)},"patchGoalsRequest")
 }
-export const deleteRequest = async(id:string):Promise<void | null>=>api<void|null>(`/database/project-ideas/${id}`,{method:"DELETE"},"deleteRequest")
+export const deleteRequest = async(id:string,userId:string ):Promise<void | null>=> api<void|null>(`/database/project-ideas/${id}?user=${userId}`,{method:"DELETE"},"deleteRequest")
 type ProjectFilterSubmitType ={
    categories: CategoriesTypeObjArr,
    completed:boolean,   
