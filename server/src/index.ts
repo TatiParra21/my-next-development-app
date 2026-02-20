@@ -31,7 +31,7 @@ app.use("/database", router)
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.REDIRECT_URI || "http://localhost:4000/oauth2callback";
-
+console.log("REDIRECT_URI", REDIRECT_URI)
 app.get("/auth/google", (req, res) => {
   const code_challenge = req.query.code_challenge;
 

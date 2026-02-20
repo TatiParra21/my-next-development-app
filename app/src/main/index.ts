@@ -144,6 +144,7 @@ ipcMain.handle(
       // 1. Get OAuth URL from backend
       console.log("Getting Auth URL...")
       const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
+      console.log("backendUrl", backendUrl)
       const res = await axios.get(`${backendUrl}/auth/google`, {
         params: { code_challenge: codeChallenge },
       });
@@ -156,7 +157,7 @@ ipcMain.handle(
       return;
 
     } catch (err) {
-      console.error(err);
+      console.error(err, "ERIRIR");
       throw err;
     }
   }
@@ -243,7 +244,7 @@ ipcMain.handle("fetch-google-profile", async (): Promise<GoogleUserProfile | nul
     );
     return res.data;
   } catch (err) {
-    console.error(err);
+    console.error(err, "ERROR MESSAGE FROM HEEE");
     return null;
   }
 });
