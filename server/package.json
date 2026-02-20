@@ -2,6 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "set NODE_OPTIONS=--loader ts-node/esm && nodemon src/index.ts",
     "watch": "tsc --watch",

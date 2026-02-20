@@ -4,13 +4,15 @@ import dotenv from 'dotenv';
 import path from "path";
 import { Request, Response } from 'express';
 import axios from "axios";
-
+import { fileURLToPath } from 'url';
 // Point to the correct location of .env manually
 //dotenv.config({ path: path.resolve(__dirname, '../.env') }) // ✅
+const __filename = fileURLToPath(import.meta.url);
+const __dir = path.dirname(__filename);
 dotenv.config({
-  path: path.resolve(__dirname, '../.env')
+  path: path.resolve(__dir, '../.env')
 })
-import { router } from './project_ideas_db';
+import { router } from './project_ideas_db.js';
 import cors from 'cors';
 import express from 'express'
 import listEndpoints from "express-list-endpoints";
