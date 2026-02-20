@@ -3,7 +3,7 @@ import { Conf } from "electron-conf";
 import path from 'path';
 import { setSecureToken, getSecureToken, deleteSecureToken, getAccessToken, refreshAccessToken, codeVerifierStore } from "./tokenStore.js";
 import { ipcMain, } from "electron";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 
 export interface GoogleAuthResult {
@@ -14,7 +14,8 @@ export interface GoogleAuthResult {
 }
 
 const PROTOCOL_PREFIX = 'mynextdevproject';
-
+const isEnv = process.env.BACKEND_URL;
+console.log("isEnv", isEnv)
 // Register protocol
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
@@ -99,7 +100,7 @@ function createWindow(): void {
     mainWindow.loadURL("http://localhost:5173");
   } else {
     mainWindow.loadFile(
-      path.join(__dirname, "../app/index.html")
+      path.join(__dirname, "../renderer/index.html")
     );
   }
 
@@ -143,7 +144,8 @@ ipcMain.handle(
     try {
       // 1. Get OAuth URL from backend
       console.log("Getting Auth URL...")
-      const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
+      const backendUrl = "https://my-next-dev-project.onrender.com"
+
       console.log("backendUrl", backendUrl)
       const res = await axios.get(`${backendUrl}/auth/google`, {
         params: { code_challenge: codeChallenge },
@@ -156,9 +158,16 @@ ipcMain.handle(
       // 3. Return void (Renderer should wait for event)
       return;
 
-    } catch (err) {
-      console.error(err, "ERIRIR");
-      throw err;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Status:", error.response?.status);
+        console.error("Message:", error.response?.data);
+        throw error;
+      } else {
+        console.error("Unknown error:", error);
+        throw error;
+      }
+
     }
   }
 );
@@ -167,7 +176,7 @@ ipcMain.handle(
   "exchange-google-code",
   async (_event, { code, codeVerifier }: { code: string; codeVerifier: string }) => {
     try {
-      const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
+      const backendUrl = "https://my-next-dev-project.onrender.com";
       const res = await axios.post(`${backendUrl}/auth/google/exchange`, {
         code,
         code_verifier: codeVerifier,
@@ -233,6 +242,7 @@ export interface GoogleUserProfile {
   picture: string;
   locale?: string;
 }
+
 ipcMain.handle("fetch-google-profile", async (): Promise<GoogleUserProfile | null> => {
   const accessToken = await getAccessToken()
   if (!accessToken) return null;
@@ -243,8 +253,13 @@ ipcMain.handle("fetch-google-profile", async (): Promise<GoogleUserProfile | nul
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     return res.data;
-  } catch (err) {
-    console.error(err, "ERROR MESSAGE FROM HEEE");
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Status:", error.response?.status);
+      console.error("Message:", error.response?.data);
+    } else {
+      console.error("Unknown error:", error);
+    }
     return null;
   }
 });
