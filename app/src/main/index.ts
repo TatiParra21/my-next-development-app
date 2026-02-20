@@ -128,7 +128,7 @@ app.on('activate', () => {
 ipcMain.handle("set-code-verifier", async (_event, codeVerifier: string) => {
   codeVerifierStore.set("code-verifier", codeVerifier)
 })
-ipcMain.handle("get-code-verifier", async (_event) => {
+ipcMain.handle("get-code-verifier", async (_event): Promise<string | null> => {
   return codeVerifierStore.get("code-verifier")
 })
 ipcMain.handle("delete-code-verifier", async (_event) => {
