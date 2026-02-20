@@ -4,19 +4,13 @@ import { electronAPI } from "@electron-toolkit/preload";
 // ✅ Merge all safe APIs into one object and expose it once
 const mergedElectronAPI = {
   ...electronAPI, // Built-in Electron toolkit features (already safe)
-//REMOVED PART
+  //REMOVED PART
   // ✅ Allow frontend to open external URLs
-  openExternal: (url: string) => shell.openExternal(url),
-  startGoogleLogin: () =>
-    shell.openExternal("https://my-next-dev-project.onrender.com/auth/google"),
-  onAuthToken: async(callback:(url:string)=>void) => {
-    //this is returning anEventListerner
-    ipcRenderer.on("auth-token-url", (_, url) => callback(url));
-  },
+
 };
 console.log("✅ PRELOAD FILE LOADED");
-import { GoogleAuthResult } from "./main";
-import { GoogleUserProfile } from "./main";
+import { GoogleAuthResult } from "../main";
+import { GoogleUserProfile } from "../main";
 contextBridge.exposeInMainWorld("api", {
   startGoogleLogin: (
     codeVerifier: string,
@@ -30,7 +24,14 @@ contextBridge.exposeInMainWorld("api", {
   logout: (): Promise<boolean> => ipcRenderer.invoke("google-logout"),
   isLoggedIn: (): Promise<boolean> => ipcRenderer.invoke("is-logged-in"),
   getAccessToken: (): Promise<string> => ipcRenderer.invoke("get-access-token"),
-  getProfile: ():  Promise<GoogleUserProfile | null> => ipcRenderer.invoke("fetch-google-profile"),
+  getProfile: (): Promise<GoogleUserProfile | null> => ipcRenderer.invoke("fetch-google-profile"),
+  onGoogleAuthCode: (callback: (code: string) => void) =>
+    ipcRenderer.on('google-auth-code', (_event, { code }) => callback(code)),
+  exchangeGoogleCode: (code: string, codeVerifier: string) =>
+    ipcRenderer.invoke('exchange-google-code', { code, codeVerifier }),
+  setCodeVerifier: (codeVerifier: string) => ipcRenderer.invoke("set-code-verifier", codeVerifier),
+  getCodeVerifier: () => ipcRenderer.invoke("get-code-verifier"),
+  deleteCodeVerifier: () => ipcRenderer.invoke("delete-code-verifier"),
 });
 
 

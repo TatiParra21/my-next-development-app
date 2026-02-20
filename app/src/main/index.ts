@@ -1,7 +1,7 @@
-import { app, BrowserWindow, safeStorage, } from 'electron';
+import { app, BrowserWindow, safeStorage, shell } from 'electron';
 import { Conf } from "electron-conf";
 import path from 'path';
-import{  setSecureToken, getSecureToken, deleteSecureToken, getAccessToken, refreshAccessToken } from "./tokenStore.js";
+import { setSecureToken, getSecureToken, deleteSecureToken, getAccessToken, refreshAccessToken, codeVerifierStore } from "./tokenStore.js";
 import { ipcMain, } from "electron";
 import axios from "axios";
 
@@ -13,9 +13,9 @@ export interface GoogleAuthResult {
   token_type?: string;
 }
 
-const PROTOCOL_PREFIX = 'myelectronproject';
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+const PROTOCOL_PREFIX = 'mynextdevproject';
 
+// Register protocol
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient(
@@ -28,38 +28,86 @@ if (process.defaultApp) {
   app.setAsDefaultProtocolClient(PROTOCOL_PREFIX);
 }
 
-const createWindow = ():void => {
+// Single Instance Lock
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine) => {
+    // Someone tried to run a second instance, we should focus our window.
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+    // Handle deep link on Windows
+    const url = commandLine.find(arg => arg.startsWith(`${PROTOCOL_PREFIX}://`));
+    if (url) handleDeepLink(url);
+  });
+
+  // Create window...
+  app.on('ready', createWindow);
+}
+
+// Global deep link handler function
+function handleDeepLink(url: string) {
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.protocol !== `${PROTOCOL_PREFIX}:`) return;
+
+    // Example format: mynextdevproject://auth?code=...
+    if (urlObj.hostname === 'auth' || urlObj.pathname.includes('auth')) {
+      const params = new URLSearchParams(urlObj.search);
+      const code = params.get('code');
+
+      if (code) {
+        const mainWindow = BrowserWindow.getAllWindows()[0];
+        if (mainWindow) {
+          mainWindow.webContents.send('google-auth-code', { code });
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Deep link error', e);
+  }
+}
+
+// Handle deep link on macOS
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  handleDeepLink(url);
+});
+
+
+function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.mjs"),
-       sandbox: false,
+      sandbox: false,
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
 
   // and load the index.html of the app.
-const isDev = process.env.NODE_ENV === "development";
+  const isDev = process.env.NODE_ENV === "development";
 
-if (isDev) {
-  mainWindow.loadURL("http://localhost:5173");
-} else {
-  mainWindow.loadFile(
-    path.join(__dirname, "../app/index.html")
-  );
-}
+  if (isDev) {
+    mainWindow.loadURL("http://localhost:5173");
+  } else {
+    mainWindow.loadFile(
+      path.join(__dirname, "../app/index.html")
+    );
+  }
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 };
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -77,80 +125,70 @@ app.on('activate', () => {
     createWindow();
   }
 });
-
+ipcMain.handle("set-code-verifier", async (_event, codeVerifier: string) => {
+  codeVerifierStore.set("code-verifier", codeVerifier)
+})
+ipcMain.handle("get-code-verifier", async (_event) => {
+  return codeVerifierStore.get("code-verifier")
+})
+ipcMain.handle("delete-code-verifier", async (_event) => {
+  codeVerifierStore.deleteKey("code-verifier")
+})
 ipcMain.handle(
   "google-login",
   async (_event, { codeVerifier, codeChallenge }: {
-      codeVerifier: string;
-      codeChallenge: string;
-    }):Promise<GoogleAuthResult> => {
+    codeVerifier: string;
+    codeChallenge: string;
+  }): Promise<void> => {
     try {
       // 1. Get OAuth URL from backend
-      console.log("We are over here")
-      const res = await axios.get("http://localhost:4000/auth/google", {
+      console.log("Getting Auth URL...")
+      const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
+      const res = await axios.get(`${backendUrl}/auth/google`, {
         params: { code_challenge: codeChallenge },
       });
       const authUrl = res.data.authUrl;
-     // console.log("We are over here2",res.data.authUrl, "res", res)
-      // 2. Open visible BrowserWindow to handle login
-      const loginWindow = new BrowserWindow({
-        width: 500,
-        height: 700,
-        show: true,
-        webPreferences: { nodeIntegration: false },
-      });
 
-      return await new Promise<GoogleAuthResult>((resolve, reject) => {
-        loginWindow.webContents.on("did-navigate", async (_event, newUrl) => {
-          const parsedUrl = new URL(newUrl);
-  console.log("we went onto rokern res1", parsedUrl.origin,parsedUrl.pathname)
-          // 3. Check if Google redirected to our backend callback
+      // 2. Open System Browser
+      await shell.openExternal(authUrl);
 
-          if (
-            parsedUrl.origin === "http://localhost:4000" &&
-            parsedUrl.pathname === "/oauth2callback"
-          ) {
-              console.log("it passeds")
-            const code = parsedUrl.searchParams.get("code");
-            loginWindow.close();
-            if (!code) return reject("No code received");
+      // 3. Return void (Renderer should wait for event)
+      return;
 
-            try {
-              console.log("we went onto rokern res,",code, codeVerifier)
-              //Exchange code for token via backend
-              const tokenRes = await axios.get(
-                "http://localhost:4000/oauth2callback",
-                {
-                  params: { code, code_verifier: codeVerifier },
-                }
-              );
-              // Save tokens in OS keychain
-
-              console.log("where tokens saved")
-              setSecureToken( "google-access-token",tokenRes.data.access_token)
-             setSecureToken( "google-refresh-token",tokenRes.data.refresh_token)
-    
-
-              resolve(tokenRes.data);
-            } catch (err) {
-              reject(err);
-            }
-          }
-        });
-
-        // 5. Load Google login
-        loginWindow.loadURL(authUrl);
-      });
     } catch (err) {
       console.error(err);
-      ///return { access_token: null };
-      throw err
+      throw err;
+    }
+  }
+);
+
+ipcMain.handle(
+  "exchange-google-code",
+  async (_event, { code, codeVerifier }: { code: string; codeVerifier: string }) => {
+    try {
+      const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
+      const res = await axios.post(`${backendUrl}/auth/google/exchange`, {
+        code,
+        code_verifier: codeVerifier,
+      });
+
+      const { access_token, refresh_token } = res.data;
+
+      setSecureToken("google-access-token", access_token);
+      if (refresh_token) {
+        setSecureToken("google-refresh-token", refresh_token);
+      }
+
+      return res.data;
+    } catch (err) {
+      console.error("Exchange failed", err);
+      return null;
     }
   }
 );
 
 ipcMain.handle("google-logout", async () => {
-  const accessToken =await getAccessToken()
+  const accessToken = await getAccessToken()
   if (accessToken) {
     // Revoke token on Google
     await axios.post(
@@ -164,8 +202,8 @@ ipcMain.handle("google-logout", async () => {
 
   // Delete tokens from Keytar
   deleteSecureToken("google-access-token")
-   deleteSecureToken("google-refresh-token")
- 
+  deleteSecureToken("google-refresh-token")
+
 
   return true;
 });
@@ -195,7 +233,7 @@ export interface GoogleUserProfile {
   locale?: string;
 }
 ipcMain.handle("fetch-google-profile", async (): Promise<GoogleUserProfile | null> => {
-  const accessToken =await getAccessToken()
+  const accessToken = await getAccessToken()
   if (!accessToken) return null;
 
   try {

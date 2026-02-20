@@ -1,7 +1,7 @@
 
 
-import  dotenv from 'dotenv';
-import  path from "path";
+import dotenv from 'dotenv';
+import path from "path";
 import { Request, Response } from 'express';
 import axios from "axios";
 
@@ -25,11 +25,10 @@ console.log("🧭 Registered routes:", listEndpoints(app));
 console.log("server is staring")
 app.use(cors())
 app.use(express.json())
-app.use("/database",router)
+app.use("/database", router)
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
-const REDIRECT_URI =
-  "http://localhost:4000/oauth2callback"; // hosted redirect
+const REDIRECT_URI = process.env.REDIRECT_URI || "http://localhost:4000/oauth2callback";
 
 app.get("/auth/google", (req, res) => {
   const code_challenge = req.query.code_challenge;
@@ -51,7 +50,7 @@ app.get("/auth/google", (req, res) => {
 app.get("/refresh-token", async (req, res) => {
   const refresh_token = req.query.refresh_token;
 
- if (typeof refresh_token !== "string") {
+  if (typeof refresh_token !== "string") {
     return res.status(400).send("Missing or invalid refresh token");
   }
 
@@ -70,8 +69,8 @@ app.get("/refresh-token", async (req, res) => {
 
     res.json(tokenRes.data); // returns new access_token
   } catch (err) {
-   // console.error(err.response?.data || err.message);
-   console.error(err)
+    // console.error(err.response?.data || err.message);
+    console.error(err)
     res.status(500).json({ error: "Failed to refresh token" });
   }
 });
@@ -80,17 +79,23 @@ app.get("/refresh-token", async (req, res) => {
 
 app.get("/oauth2callback", async (req, res) => {
   const code = req.query.code;
-  const code_verifier = req.query.code_verifier;
+  if (!code) return res.status(400).send("Missing code");
 
-  if (!code || !code_verifier)
-    return res.status(400).send("Missing code or verifier");
-if (typeof code !== "string" || typeof code_verifier !== "string") {
-    return res.status(400).send("Missing code or verifier");
+  // Redirect to custom protocol with CODE only
+  res.redirect(`mynextdevproject://auth?code=${code}`);
+});
+
+app.post("/auth/google/exchange", async (req, res) => {
+  const { code, code_verifier } = req.body;
+
+  if (!code || !code_verifier) {
+    return res.status(400).json({ error: "Missing code or verifier" });
   }
+
   try {
     const params = new URLSearchParams();
     params.append("client_id", CLIENT_ID);
-    params.append("client_secret", CLIENT_SECRET); // Optional for PKCE
+    params.append("client_secret", CLIENT_SECRET);
     params.append("code", code);
     params.append("code_verifier", code_verifier);
     params.append("redirect_uri", REDIRECT_URI);
@@ -103,20 +108,17 @@ if (typeof code !== "string" || typeof code_verifier !== "string") {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       }
     );
-   
 
     res.json(tokenRes.data);
   } catch (err) {
-   // console.error("Token exchange failed:", err.response?.data || err.message);
-    res
-      .status(500)
-      .json({ error: "Token exchange failed", details: err });
+    console.error("Token exchange failed:", err);
+    res.status(500).json({ error: "Token exchange failed", details: err });
   }
 });
-app.use((req: Request,res:Response)=>{
-  res.status(404).json({message:"end point not found"})
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ message: "end point not found" })
 })
-app.get('/', (req:Request, res:Response) => {
+app.get('/', (req: Request, res: Response) => {
   res.send('Hello from backend!');
 });
 
