@@ -1,12 +1,16 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "baseUrl": ".",
     "jsx": "react-jsx",
     "paths": {
-      "@renderer/*": ["src/renderer/src/*"]
+      "@renderer/*": [
+        "src/renderer/src/*"
+      ]
     }
   },
-  "include": ["src/renderer/**/*"]
+  "include": [
+    "src/renderer/**/*"
+  ]
 }
