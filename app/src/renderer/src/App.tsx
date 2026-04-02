@@ -1,7 +1,7 @@
 
 import React, { useEffect, Suspense } from 'react'
 import { SectionNotReady } from './components/SectionNotReady'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
 import { SubLayout } from './components/SubLayout'
 import { LoginForm } from './components/FormComponents/LoginForm'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -12,7 +12,7 @@ const AddNewProjectForm = React.lazy(() => import('./components/AddNewProjectFor
 const Layout = React.lazy(() => import('./components/Layout'))
 const ProjectSelectionBase = React.lazy(() => import('./components/ProjectSelectionBase'))
 const ProjectBaseEdit = React.lazy(() => import('./components/FormComponents/ProjectBaseEdit'))
-const router = createBrowserRouter([
+const router = createHashRouter([
   { path: "/", element: <LoggedInRoute><LoginForm /> </LoggedInRoute>, errorElement: <SectionNotReady /> },
   { path: "/sign-in", element: <LoggedInRoute> <LoginForm /> </LoggedInRoute>, errorElement: <SectionNotReady /> },
   {

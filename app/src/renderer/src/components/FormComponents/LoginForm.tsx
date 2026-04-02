@@ -32,7 +32,7 @@ export const LoginForm =():JSX.Element=>{
 
     return(
         <>
-   
+    
         <button onClick={signInWithGoogleFunc}>Sign in With Google</button>
         {params == "/" && <p>{`Already have an account?`}<NavLink to="sign-in">Sign In</NavLink></p>}
          {params == "/sign-in" && <p>{`Don't have an account?`}<NavLink to="/">Sign Up</NavLink></p>}     
